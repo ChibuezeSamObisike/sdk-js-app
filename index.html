@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Host Application</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <script src="./sdk.js"></script>
+    <button id="sendMessageButton" onclick="openSDKIframe()">
+      Open SDK Iframe
+    </button>
+
+    <script>
+      function onSuccess(data) {
+        console.log("Data from Onsuccess", data);
+      }
+      function onError(data) {}
+      function onClose(data) {}
+      const sdk = new SDK({ onSuccess, onError, onClose });
+      // Function to open the SDK iframe5
+      function openSDKIframe() {
+        // Replace 'your-sdk-url' with the URL you want to load in the iframe
+        const sdkUrl = "http://localhost:3000";
+        sdk.openIframe(sdkUrl);
+        sdk.addMessageListener();
+      }
+    </script>
+  </body>
+</html>
