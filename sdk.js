@@ -1,13 +1,17 @@
-function isRequired(key) {
-  throw new Error(`${key} is required`);
-}
-
 class SDK {
   constructor({ onSuccess, onError, onClose, ...rest }) {
     // Initialize the SDK instance
-    this.onSuccess = onSuccess || isRequired("On Success callback is required");
-    this.onError = onError || isRequired("On Error callback is required");
-    this.onClose = onClose || isRequired("On close callback is required");
+    if (!(this instanceof SDK)) {
+      return new SDK({
+        onSuccess,
+        onError,
+        onClose,
+        ...rest,
+      });
+    }
+    this.onSuccess = onSuccess;
+    this.onError = onError;
+    this.onClose = onClose;
     this.config = rest;
   }
 
@@ -23,7 +27,7 @@ class SDK {
     svg.setAttribute("width", "40");
     svg.setAttribute("height", "40");
     svg.innerHTML = `
-      <circle cx="20" cy="20" r="15" fill="none" stroke-width="3" stroke="#000">
+      <circle cx="20" cy="20" r="15" fill="none" stroke-width="3" stroke="#007bff">
         <animate attributeName="r" from="15" to="0" dur="0.8s" begin="0s" repeatCount="indefinite" />
       </circle>
     `;
@@ -44,14 +48,6 @@ class SDK {
       modalContainer.removeChild(loader); // Remove the loader when the iframe is fully loaded
       modalContainer.appendChild(iframe);
       modalContainer.style.display = "block"; // Display the iframe when it's fully loaded
-
-      iframe.contentWindow.postMessage(
-        {
-          type: "sdkData",
-          config: this.config,
-        },
-        origin
-      );
     };
 
     iframe.onerror = () => {
@@ -92,25 +88,13 @@ class SDK {
       if (event.data.event === "close") {
         this.closeIframe();
       }
-      if (event.data.event === "success") {
-        this.onSuccess(event.data);
-      }
-
-      if (event.data.event === "error") {
-        this.onError(event.data);
-      }
 
       // Handle data received from the SDK
       const data = event.data;
-
+      this.onSuccess(data);
       console.log("Data received from SDK:", data);
     });
   }
-}
-
-// This makes the module safe to import into an isomorphic code.
-if (typeof window !== "undefined") {
-  window.SDK = SDK; // make Pay available in the window object
 }
 
 module.exports = { SDK };
