@@ -1,6 +1,6 @@
 class SDK {
   constructor({ onSuccess, onError, onClose, ...rest }) {
-    // Initialize the SDK instance
+    // Initialize the SDK instance if an instance doesn't already exist
     if (!(this instanceof SDK)) {
       return new SDK({
         onSuccess,
@@ -9,89 +9,123 @@ class SDK {
         ...rest,
       });
     }
+    // Callback functions
     this.onSuccess = onSuccess;
     this.onError = onError;
     this.onClose = onClose;
+    // Additional configuration
     this.config = rest;
   }
 
-  openIframe(url) {
+  init() {
+    this.#openIframe();
+    this.#addMessageListener();
+  }
+
+  // Method to open an iframe with a provided URL
+  #openIframe() {
+    // Create modal backdrop
     const modalBackdrop = document.createElement("div");
     modalBackdrop.classList.add("sdk-modal-backdrop");
+    modalBackdrop.style.position = "fixed";
+    modalBackdrop.style.top = "0";
+    modalBackdrop.style.left = "0";
+    modalBackdrop.style.width = "100%";
+    modalBackdrop.style.height = "100%";
+    modalBackdrop.style.background = "rgba(0, 0, 0, 0.2)";
+    modalBackdrop.style.display = "flex";
+    modalBackdrop.style.justifyContent = "center";
+    modalBackdrop.style.alignItems = "center";
+    modalBackdrop.style.zIndex = "9999";
 
-    const loader = document.createElement("div");
-    loader.classList.add("sdk-loader");
-
-    // Create an SVG loading animation
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("width", "40");
-    svg.setAttribute("height", "40");
-    svg.innerHTML = `
-      <circle cx="20" cy="20" r="15" fill="none" stroke-width="3" stroke="#007bff">
-        <animate attributeName="r" from="15" to="0" dur="0.8s" begin="0s" repeatCount="indefinite" />
-      </circle>
-    `;
-
-    loader.appendChild(svg);
-
+    // Create modal container
     const modalContainer = document.createElement("div");
-    modalContainer.classList.add("sdk-modal-container");
+    modalContainer.style.borderRadius = "5px";
+    modalContainer.style.position = "relative";
+    modalContainer.style.width = "100%";
+    modalContainer.style.height = "100%";
+
+    // Create loader element
+    const loader = document.createElement("div");
+    loader.textContent = "Loading...";
+    loader.style.textAlign = "center";
+    loader.style.padding = "20px";
+    loader.style.fontWeight = "bold";
+    loader.style.color = "white";
+    loader.style.height = "100vh";
+    loader.style.display = "flex";
+    loader.style.alignItems = "center";
+    loader.style.justifyContent = "center";
 
     modalContainer.appendChild(loader);
     modalBackdrop.appendChild(modalContainer);
     document.body.appendChild(modalBackdrop);
 
+    // Create iframe element
     const iframe = document.createElement("iframe");
-    iframe.src = url;
+    iframe.src = "http://localhost:3001";
+    iframe.style.width = "100%";
+    iframe.style.height = "100%";
+    iframe.style.border = "none";
 
+    // When iframe is fully loaded
     iframe.onload = () => {
-      modalContainer.removeChild(loader); // Remove the loader when the iframe is fully loaded
+      // Send initial data to iframe
+      iframe.contentWindow.postMessage(
+        {
+          type: "sdkData",
+          config: this.config,
+        },
+        "*"
+        //This means the host application which is the react app
+      );
+      // Remove loader and display iframe
+      modalContainer.removeChild(loader);
       modalContainer.appendChild(iframe);
-      modalContainer.style.display = "block"; // Display the iframe when it's fully loaded
+      modalContainer.style.display = "block";
     };
 
+    // Handle iframe loading error
     iframe.onerror = () => {
       loader.textContent = "Failed to load the content.";
       setTimeout(() => {
-        this.closeIframe();
-      }, 2000); // Close the modal after 2 seconds in case of an error
+        this.#closeIframe();
+      }, 2000);
     };
 
     modalContainer.appendChild(iframe);
-
-    // Close the modal when the backdrop is clicked
-    modalBackdrop.addEventListener("click", () => {
-      this.closeIframe();
-    });
   }
 
-  closeIframe() {
+  // Method to close the iframe
+  #closeIframe() {
     const modalBackdrop = document.querySelector(".sdk-modal-backdrop");
     if (modalBackdrop) {
       document.body.removeChild(modalBackdrop);
     }
   }
 
+  // Method to send data to the host
   sendToHost(data) {
-    // You can use window.postMessage to send data to the host
     window.parent.postMessage(data, "*");
   }
 
-  addMessageListener() {
-    // Event listener to receive data from the SDK
+  // Method to add message event listener
+  #addMessageListener() {
     window.addEventListener("message", (event) => {
       // Check the event source for security reasons
-      if (event.origin !== "http://localhost:3000") {
+      const data = event.data;
+      if (event.origin !== "http://localhost:3001") {
         return;
       }
 
-      if (event.data.event === "close") {
-        this.closeIframe();
+      if (event.data.type === "close") {
+        this.#closeIframe();
       }
 
       // Handle data received from the SDK
-      const data = event.data;
-      this.onSuccess(data);
+      if (event.data?.type === "success") {
+        this.onSuccess(data);
+      }
       console.log("Data received from SDK:", data);
     });
   }

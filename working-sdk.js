@@ -9,30 +9,20 @@ class SDK {
         ...rest,
       });
     }
-    // Callback functions
     this.onSuccess = onSuccess;
     this.onError = onError;
     this.onClose = onClose;
-    // Additional configuration
     this.config = rest;
   }
 
-  init() {
-    this.#openIframe();
-    this.#addMessageListener();
-  }
-
-  // Method to open an iframe with a provided URL
-  #openIframe() {
-    // Create modal backdrop
+  openIframe(url) {
     const modalBackdrop = document.createElement("div");
     modalBackdrop.classList.add("sdk-modal-backdrop");
 
-    // Create loader element
     const loader = document.createElement("div");
     loader.classList.add("sdk-loader");
 
-    // Create SVG loading animation
+    // Create an SVG loading animation
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("width", "40");
     svg.setAttribute("height", "40");
@@ -44,7 +34,6 @@ class SDK {
 
     loader.appendChild(svg);
 
-    // Create modal container
     const modalContainer = document.createElement("div");
     modalContainer.classList.add("sdk-modal-container");
 
@@ -52,13 +41,10 @@ class SDK {
     modalBackdrop.appendChild(modalContainer);
     document.body.appendChild(modalBackdrop);
 
-    // Create iframe element
     const iframe = document.createElement("iframe");
-    iframe.src = "http://localhost:3001";
+    iframe.src = url;
 
-    // When iframe is fully loaded
     iframe.onload = () => {
-      // Send initial data to iframe
       iframe.contentWindow.postMessage(
         {
           type: "sdkData",
@@ -66,46 +52,49 @@ class SDK {
         },
         "*"
       );
-      // Remove loader and display iframe
-      modalContainer.removeChild(loader);
+      modalContainer.removeChild(loader); // Remove the loader when the iframe is fully loaded
       modalContainer.appendChild(iframe);
-      modalContainer.style.display = "block";
+      modalContainer.style.display = "block"; // Display the iframe when it's fully loaded
     };
 
-    // Handle iframe loading error
     iframe.onerror = () => {
       loader.textContent = "Failed to load the content.";
       setTimeout(() => {
-        this.#closeIframe();
-      }, 2000);
+        this.closeIframe();
+      }, 2000); // Close the modal after 2 seconds in case of an error
     };
 
     modalContainer.appendChild(iframe);
+
+    // Close the modal when the backdrop is clicked
+    modalBackdrop.addEventListener("click", () => {
+      this.closeIframe();
+    });
   }
 
-  // Method to close the iframe
-  #closeIframe() {
+  closeIframe() {
     const modalBackdrop = document.querySelector(".sdk-modal-backdrop");
     if (modalBackdrop) {
       document.body.removeChild(modalBackdrop);
     }
   }
 
-  // Method to send data to the host
   sendToHost(data) {
+    // You can use window.postMessage to send data to the host
     window.parent.postMessage(data, "*");
   }
 
-  // Method to add message event listener
-  #addMessageListener() {
+  addMessageListener() {
+    // Event listener to receive data from the SDK
     window.addEventListener("message", (event) => {
+      //  console.log("Event msg", event);
       // Check the event source for security reasons
       if (event.origin !== "http://localhost:3001") {
         return;
       }
 
       if (event.data.type === "close") {
-        this.#closeIframe();
+        this.closeIframe();
       }
 
       // Handle data received from the SDK
@@ -117,5 +106,3 @@ class SDK {
 }
 
 module.exports = { SDK };
-
-x;
