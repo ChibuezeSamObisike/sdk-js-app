@@ -64,6 +64,7 @@ class SDK {
     // Create iframe element
     const iframe = document.createElement("iframe");
 
+    // The source link is the link to deployed react application running on vercel
     iframe.src = "https://sdk-react-app.vercel.app/";
 
     iframe.style.width = "100%";
