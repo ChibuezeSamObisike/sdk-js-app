@@ -63,7 +63,9 @@ class SDK {
 
     // Create iframe element
     const iframe = document.createElement("iframe");
+
     iframe.src = "https://sdk-react-app.vercel.app/";
+
     iframe.style.width = "100%";
     iframe.style.height = "100%";
     iframe.style.border = "none";
@@ -114,9 +116,13 @@ class SDK {
     window.addEventListener("message", (event) => {
       // Check the event source for security reasons
       const data = event.data;
-      if (event.origin !== "https://sdk-react-app.vercel.app/") {
-        return;
-      }
+
+      // if (
+      //   event.origin !== "http://127.0.0.1:5500" ||
+      //   event.origin !== "https://sdk-js-app.vercel.app/"
+      // ) {
+      //   return;
+      // }
 
       if (event.data.type === "close") {
         this.#closeIframe();
@@ -126,7 +132,6 @@ class SDK {
       if (event.data?.type === "success") {
         this.onSuccess(data);
       }
-      console.log("Data received from SDK:", data);
     });
   }
 }
