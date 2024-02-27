@@ -63,7 +63,7 @@ class SDK {
 
     // Create iframe element
     const iframe = document.createElement("iframe");
-    iframe.src = "http://localhost:3001";
+    iframe.src = "https://sdk-react-app.vercel.app/";
     iframe.style.width = "100%";
     iframe.style.height = "100%";
     iframe.style.border = "none";
@@ -114,7 +114,7 @@ class SDK {
     window.addEventListener("message", (event) => {
       // Check the event source for security reasons
       const data = event.data;
-      if (event.origin !== "http://localhost:3001") {
+      if (event.origin !== "https://sdk-react-app.vercel.app/") {
         return;
       }
 
