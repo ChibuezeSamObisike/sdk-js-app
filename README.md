@@ -19,7 +19,6 @@ In the body of your html kindly paste this code
       });
     
       function openSDKIframe() {
-        // Replace 'your-sdk-url' with the URL you want to load in the iframe
         sdk.init();
       }
     </script>
